@@ -5,7 +5,9 @@
 ### File Structure
 1. **`db.py`** — Handles database connection and configuration.
 2. **`models.py`** — Defines ORM models representing database tables.
-3. **`controllers.py`** — Contains API routes and CRUD (Create, Read, Update, Delete) logic for the app.
+3. **`controller.py`** — Service entry point.
+4. **controllers/** — Contains API routes and CRUD (Create, Read, Update, Delete) logic for the app.
+5. **utils/** — Contains common helper functions used in the whole backend
 
 
 
@@ -74,7 +76,12 @@ Try visiting (or use Postman):
 - ```http://127.0.0.1:5000/transactions```
 - ```http://127.0.0.1:5000/users```
 
-You can find more endpoints defined under the ```@app.route()``` in ```be/controllers.py```. Currently only GET requests are made. 
+You can find more endpoints defined in the urunder the ```@app.route()``` in ```be/controllers.py```. Currently only GET requests are made. 
+Current available endpoints are: 
+1. **/transactions**  : GET, POST
+2. **/users**         : GET, POST
+3. **/categories**    : GET, POST
+4. **/budgets**       : GET, POST
 
 ### 9. Running the Frontend
 In a new terminal, navigate to ```fe/```
