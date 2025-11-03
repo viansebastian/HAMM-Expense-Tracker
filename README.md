@@ -6,8 +6,8 @@
 1. **`db.py`** — Handles database connection and configuration.
 2. **`models.py`** — Defines ORM models representing database tables.
 3. **`controller.py`** — Service entry point.
-4. **controllers/** — Contains API routes and CRUD (Create, Read, Update, Delete) logic for the app.
-5. **utils/** — Contains common helper functions used in the whole backend
+4. **`controllers/`** — Contains API routes and CRUD (Create, Read, Update, Delete) logic for the app.
+5. **`utils/`** — Contains common helper functions used in the whole backend
 
 
 
@@ -78,10 +78,10 @@ Try visiting (or use Postman):
 
 You can find more endpoints defined in the urunder the ```@app.route()``` in ```be/controllers.py```. Currently only GET requests are made. 
 Current available endpoints are: 
-1. **/transactions**  : GET, POST
-2. **/users**         : GET, POST
-3. **/categories**    : GET, POST
-4. **/budgets**       : GET, POST
+1. **`/transactions`**  : GET, POST
+2. **`/users`**         : GET, POST
+3. **`/categories`**    : GET, POST
+4. **`/budgets`**       : GET, POST
 
 ### 9. Running the Frontend
 In a new terminal, navigate to ```fe/```
