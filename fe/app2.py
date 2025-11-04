@@ -74,7 +74,7 @@ elif page == "Analytics":
 
 elif page == "Budget":
     st.header("🎯 Budget Tracker")
-    budget = st.number_input("Set Monthly Budget ($)", min_value=0.0, step=10.0)
+    budget = st.number_input("Set Monthly Budget (Rp.)", min_value=0.0, step=10.0)
     spent = df[df['Type']=='Expense']['Amount'].sum()
     if budget > 0:
         progress = min(spent / budget, 1.0)
@@ -88,5 +88,5 @@ elif page == "Budget":
 elif page == "Settings":
     st.header("⚙️ Settings")
     theme = st.radio("Select Theme", ["Light", "Dark"], horizontal=True)
-    currency = st.selectbox("Preferred Currency", ["USD", "IDR", "KRW"])
+    currency = st.selectbox("Preferred Currency", ["IDR", "USD", "KRW"])
     st.success(f"Settings saved: Theme - {theme}, Currency - {currency}")
