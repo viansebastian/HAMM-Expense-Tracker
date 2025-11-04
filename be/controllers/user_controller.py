@@ -63,3 +63,61 @@ def create_user():
     finally:
         db.close()
     return response, status_code
+
+
+@user_bp.route("/<int:user_id>", methods=["DELETE"])
+def delete_user(user_id):
+    db = SessionLocal()
+    try:
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+        if not user:
+            return jsonify({"error": f"User with ID {user_id} not found"}), 404
+        
+        db.delete(user)
+        db.commit()
+        return jsonify({"message": f"User with ID {user_id} deleted successfully"}), 200
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        db.rollback()
+        return jsonify({"error": "Failed to delete user"}), 400
+    finally:
+        db.close()
+
+
+@user_bp.route("/<int:user_id>", methods=["PUT"])
+def update_user(user_id):
+    db = SessionLocal()
+    data = request.get_json()
+
+    try:
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+        if not user:
+            return jsonify({"error": f"User with ID {user_id} not found"}), 404
+
+        # Update fields if provided
+        if "email" in data:
+            user.email = data["email"]
+        if "first_name" in data:
+            user.first_name = data["first_name"]
+        if "last_name" in data:
+            user.last_name = data["last_name"]
+        if "password" in data:
+            user.password_hash = generate_password_hash(data["password"])
+
+        db.commit()
+        db.refresh(user)
+
+        return jsonify({
+            "message": f"User with ID {user_id} updated successfully",
+            "data": {
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name
+            }
+        }), 200
+    except Exception as e:
+        print(f"Error updating user: {e}")
+        db.rollback()
+        return jsonify({"error": "Failed to update user"}), 400
+    finally:
+        db.close()

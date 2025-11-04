@@ -69,3 +69,79 @@ def create_category():
         db.close()
 
     return response, status_code
+
+
+@category_bp.route("/<int:category_id>", methods=["PUT"])
+def update_category(category_id):
+    db = SessionLocal()
+    data = request.get_json()
+
+    try:
+        # Ensure user_id is provided
+        if "user_id" not in data:
+            return jsonify({"error": "user_id is required"}), 400
+
+        category = db.query(models.Category).filter(
+            models.Category.id == category_id,
+            models.Category.user_id == data["user_id"]
+        ).first()
+
+        if not category:
+            return jsonify({"error": "Category not found or not owned by this user"}), 404
+
+        # Update only allowed fields
+        if "name" in data:
+            category.name = data["name"]
+        if "type" in data:
+            category.type = models.TransactionType(data["type"].lower())
+
+        db.commit()
+        db.refresh(category)
+
+        return jsonify({
+            "message": f"Category with ID {category_id} updated successfully",
+            "data": {
+                "id": category.id,
+                "name": category.name,
+                "type": category.type.value
+            }
+        }), 200
+
+    except Exception as e:
+        print(f"Error updating category: {e}")
+        db.rollback()
+        return jsonify({"error": "Failed to update category"}), 400
+    finally:
+        db.close()
+
+
+@category_bp.route("/<int:category_id>", methods=["DELETE"])
+def delete_category(category_id):
+    db = SessionLocal()
+    data = request.get_json()  
+
+    try:
+        if not data or "user_id" not in data:
+            return jsonify({"error": "user_id is required"}), 400
+
+        category = db.query(models.Category).filter(
+            models.Category.id == category_id,
+            models.Category.user_id == data["user_id"]
+        ).first()
+
+        if not category:
+            return jsonify({"error": "Category not found or not owned by this user"}), 404
+
+        db.delete(category)
+        db.commit()
+
+        return jsonify({
+            "message": f"Category with ID {category_id} deleted successfully"
+        }), 200
+
+    except Exception as e:
+        print(f"Error deleting category: {e}")
+        db.rollback()
+        return jsonify({"error": "Failed to delete category"}), 400
+    finally:
+        db.close()

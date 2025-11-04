@@ -74,4 +74,3 @@ def create_transact():
         db.close()
 
     return response, status_code
-    
