@@ -64,9 +64,9 @@ FOR EACH ROW EXECUTE FUNCTION update_timestamp();
 -- ========== USERS ==========
 INSERT INTO users (id, email, password_hash, first_name, last_name, created_at, updated_at)
 VALUES
-(101, 'sarah@example.com', 'hashed_pw_1', 'Sarah', 'Lee', '2023-01-15 10:00:00', '2023-10-20 14:30:00'),
-(102, 'john@example.com', 'hashed_pw_2', 'John', 'Doe', '2023-02-01 11:30:00', '2023-11-05 09:15:00'),
-(103, 'maria@example.com', 'hashed_pw_3', 'Maria', 'Garcia', '2023-03-10 15:00:00', '2023-09-22 10:00:00');
+(101, 'sarah@example.com', 'hashed_pw_1', 'Sarah', 'Lee', '2023-01-15 10:00:00', '2023-10-20 14:30:00', 'user'),
+(102, 'john@example.com', 'hashed_pw_2', 'John', 'Doe', '2023-02-01 11:30:00', '2023-11-05 09:15:00', 'user'),
+(103, 'maria@example.com', 'hashed_pw_3', 'Maria', 'Garcia', '2023-03-10 15:00:00', '2023-09-22 10:00:00', 'user');
 
 -- ========== CATEGORIES ==========
 INSERT INTO categories (id, user_id, name, type, created_at, updated_at)

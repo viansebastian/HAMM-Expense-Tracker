@@ -59,6 +59,7 @@ class User(Base):
     budgets = relationship(
         "Budget", back_populates="user", cascade="all, delete-orphan"
     )
+    role =  Column(String, default="user")
 
 
 class Category(Base):

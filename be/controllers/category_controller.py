@@ -4,15 +4,32 @@ import models
 from db import SessionLocal
 from utils.common import check_exists
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
 category_bp = Blueprint("category_bp", __name__, url_prefix="/categories")
 
 @category_bp.route("", methods=["GET"])
+@jwt_required()
 def get_categories():
     db = SessionLocal()
-    categories = db.query(models.Category).all()
+    user_id = int(get_jwt_identity())
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if not user: 
+        return jsonify({"error": "User not found"}), 404
+    
+    if user.role == "admin": 
+        categories = db.query(models.Category).all()
+    else: 
+        categories = (
+            db.query(models.Category)
+            .filter(models.Category.user_id == user_id)
+            .all()
+        )
+        
     db.close()
+    
     return jsonify(
         [
             {
@@ -29,10 +46,22 @@ def get_categories():
 
 
 @category_bp.route("", methods=["POST"])
+@jwt_required()
 def create_category(): 
     db = SessionLocal() 
+    user_id = int(get_jwt_identity())
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if not user: 
+        return jsonify({"error": "User not found"}), 404
+    
     data = request.get_json()
     
+    if user.role == "admin" and "user_id" in data: 
+        owner_id = data["user_id"]
+    else: 
+        owner_id = user_id 
+        
     checker = {
         "user_id" : data['user_id'],
         "name": data['name'], 
@@ -72,19 +101,27 @@ def create_category():
 
 
 @category_bp.route("/<int:category_id>", methods=["PUT"])
+@jwt_required()
 def update_category(category_id):
     db = SessionLocal()
+    user_id = int(get_jwt_identity())
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if not user: 
+        return jsonify({"error": "User not found"}), 404
+    
     data = request.get_json()
 
     try:
-        # Ensure user_id is provided
-        if "user_id" not in data:
-            return jsonify({"error": "user_id is required"}), 400
-
-        category = db.query(models.Category).filter(
-            models.Category.id == category_id,
-            models.Category.user_id == data["user_id"]
-        ).first()
+        if user.role == "admin": 
+            category = db.query(models.Category).filter(
+                models.Category.id == category_id
+            ).first() 
+        else: 
+            category = db.query(models.Category).filter(
+                models.Category.id == category_id,
+                models.Category.user_id == user_id
+            ).first()
 
         if not category:
             return jsonify({"error": "Category not found or not owned by this user"}), 404
@@ -116,18 +153,27 @@ def update_category(category_id):
 
 
 @category_bp.route("/<int:category_id>", methods=["DELETE"])
+@jwt_required()
 def delete_category(category_id):
     db = SessionLocal()
+
+    user_id = int(get_jwt_identity())
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if not user: 
+        return jsonify({"error": "User not found"}), 404
     data = request.get_json()  
 
     try:
-        if not data or "user_id" not in data:
-            return jsonify({"error": "user_id is required"}), 400
-
-        category = db.query(models.Category).filter(
-            models.Category.id == category_id,
-            models.Category.user_id == data["user_id"]
-        ).first()
+        if user.role == "admin": 
+            category = db.query(models.Category).filter(
+                models.Category.id == category_id
+            ).first() 
+        else: 
+            category = db.query(models.Category).filter(
+                models.Category.id == category_id,
+                models.Category.user_id == user_id
+            ).first()
 
         if not category:
             return jsonify({"error": "Category not found or not owned by this user"}), 404

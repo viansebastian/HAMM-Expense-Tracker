@@ -4,17 +4,33 @@ import models
 from db import SessionLocal
 from utils.common import check_exists
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 
 
 budget_bp = Blueprint("budget_bp", __name__, url_prefix="/budgets")
 
 @budget_bp.route("", methods=["GET"])
+@jwt_required()
 def get_budgets():
     db = SessionLocal()
-    print(db.bind.url)
-    budgets = db.query(models.Budget).all()
+    user_id = int(get_jwt_identity())
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if not user: 
+        return jsonify({"error": "User not found"}), 404
+    
+    if user.role == "admin": 
+        budgets = db.query(models.Budget).all()
+    else: 
+        budgets = (
+            db.query(models.Budget)
+            .filter(models.Budget.user_id == user_id)
+            .all()
+        )
+        
     db.close()
+    
     return jsonify(
         [
             {
@@ -33,12 +49,19 @@ def get_budgets():
 
 
 @budget_bp.route("", methods=["POST"])
+@jwt_required()
 def create_budget(): 
     db = SessionLocal()
+    user_id = int(get_jwt_identity())
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if not user: 
+        return jsonify({"error": "User not found"}), 404
+    
     data = request.get_json()
     
     checker = {
-        "user_id": data['user_id'], 
+        "user_id": user_id, 
         "category_id": data['category_id'],
         "budget_amount": data['budget_amount'], 
         "start_date": datetime.strptime(data['start_date'], '%d-%m-%Y'),
@@ -79,8 +102,15 @@ def create_budget():
     
 
 @budget_bp.route("/<int:budget_id>", methods=["PUT"])
+@jwt_required()
 def update_budget(budget_id):
     db = SessionLocal()
+    user_id = int(get_jwt_identity())
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if not user: 
+        return jsonify({"error": "User not found"}), 404
+    
     data = request.get_json()
 
     try:
@@ -90,7 +120,7 @@ def update_budget(budget_id):
         # Find budget owned by this user
         budget = db.query(models.Budget).filter(
             models.Budget.id == budget_id,
-            models.Budget.user_id == data["user_id"]
+            models.Budget.user_id == user_id
         ).first()
 
         if not budget:
@@ -126,17 +156,21 @@ def update_budget(budget_id):
 
 
 @budget_bp.route("/<int:budget_id>", methods=["DELETE"])
+@jwt_required()
 def delete_budget(budget_id):
     db = SessionLocal()
+    user_id = int(get_jwt_identity())
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if not user: 
+        return jsonify({"error": "User not found"}), 404
+    
     data = request.get_json()  # expects { "user_id": <int> }
 
     try:
-        if not data or "user_id" not in data:
-            return jsonify({"error": "user_id is required"}), 400
-
         budget = db.query(models.Budget).filter(
             models.Budget.id == budget_id,
-            models.Budget.user_id == data["user_id"]
+            models.Budget.user_id == user_id
         ).first()
 
         if not budget:

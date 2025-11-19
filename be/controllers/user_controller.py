@@ -4,7 +4,9 @@ import models
 from db import SessionLocal
 from utils.common import check_exists
 from flask import Blueprint, jsonify, request
-from werkzeug.security import generate_password_hash
+from flask_jwt_extended import create_access_token
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import timedelta
 
 
 user_bp = Blueprint("user_bp", __name__, url_prefix="/users")
@@ -121,3 +123,29 @@ def update_user(user_id):
         return jsonify({"error": "Failed to update user"}), 400
     finally:
         db.close()
+
+
+@user_bp.route("/login", methods=["POST"])
+def login_user(): 
+    db = SessionLocal()  
+    data = request.get_json()
+    
+    email = data.get("email")
+    password = data.get("password")
+    
+    user = db.query(models.User).filter(models.User.email == email).first()
+    
+    if not user or not check_password_hash(user.password_hash, password):
+        return jsonify({"error": "Invalid email or password"}), 401
+    
+    access_token = create_access_token(
+        identity=str(user.id), 
+        expires_delta=timedelta(hours=2)
+    )
+    
+    return jsonify({
+        "message": "Login successful", 
+        "access_token": access_token,
+        "user_id": user.id, 
+        "role": user.role
+    }), 200
