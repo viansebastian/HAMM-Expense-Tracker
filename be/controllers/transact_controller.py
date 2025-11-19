@@ -54,7 +54,7 @@ def get_transactions():
 
 
 @transact_bp.route("", methods=["POST"])
-@jwt_required
+@jwt_required()
 def create_transact():
     db = SessionLocal()
     user_id = int(get_jwt_identity())    
@@ -65,7 +65,7 @@ def create_transact():
     data = request.get_json()
     
     checker = {
-        "user_id": data["user_id"],
+        "user_id": user_id,
         "category_id": data["category_id"],
         "amount": data["amount"],
         "description": data.get("description"),
@@ -139,7 +139,7 @@ def group_transactions_by_type():
 def group_transacts_by_type_cat():
     db = SessionLocal()
     user_id = int(get_jwt_identity())
-    user = db.query(models.User).filter(models.User.id == user_id)
+    user = db.query(models.User).filter(models.User.id == user_id).first()
     
     if not user: 
         return jsonify({"error": "User not found"}), 404

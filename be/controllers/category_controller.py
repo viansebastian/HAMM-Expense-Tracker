@@ -63,15 +63,13 @@ def create_category():
         owner_id = user_id 
         
     checker = {
-        "user_id" : data['user_id'],
+        "user_id" : owner_id,
         "name": data['name'], 
         "type": models.TransactionType(data['type'].lower())
     }
     
     if check_exists(db, models.Category, checker): 
-        return jsonify({
-            "error": "this category already exists"
-        }), 400
+        return jsonify({"error": "this category already exists"}), 400
         
     new_category = models.Category(**checker)
     
