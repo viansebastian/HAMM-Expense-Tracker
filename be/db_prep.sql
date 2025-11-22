@@ -6,7 +6,8 @@ CREATE TABLE users (
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    role VARCHAR(50) DEFAULT 'user'
 );
 
 CREATE TABLE categories (
@@ -62,42 +63,76 @@ CREATE TRIGGER update_budgets_modtime BEFORE UPDATE ON budgets
 FOR EACH ROW EXECUTE FUNCTION update_timestamp();
 
 -- ========== USERS ==========
-INSERT INTO users (id, email, password_hash, first_name, last_name, created_at, updated_at)
+INSERT INTO users (email, password_hash, first_name, last_name, role)
 VALUES
-(101, 'sarah@example.com', 'hashed_pw_1', 'Sarah', 'Lee', '2023-01-15 10:00:00', '2023-10-20 14:30:00', 'user'),
-(102, 'john@example.com', 'hashed_pw_2', 'John', 'Doe', '2023-02-01 11:30:00', '2023-11-05 09:15:00', 'user'),
-(103, 'maria@example.com', 'hashed_pw_3', 'Maria', 'Garcia', '2023-03-10 15:00:00', '2023-09-22 10:00:00', 'user');
+('admin@app.com', 'admin_hash', 'System', 'Admin', 'admin'),
+('sarah@example.com', 'hashed_pw_1', 'Sarah', 'Lee', 'user'),
+('john@example.com', 'hashed_pw_2', 'John', 'Doe', 'user');
 
 -- ========== CATEGORIES ==========
-INSERT INTO categories (id, user_id, name, type, created_at, updated_at)
+INSERT INTO categories (user_id, name, type)
 VALUES
-(201, 101, 'Groceries', 'expense', '2023-01-16 09:00:00', '2023-01-16 09:00:00'),
-(202, 101, 'Rent', 'expense', '2023-01-16 09:05:00', '2023-01-16 09:05:00'),
-(203, 101, 'Salary', 'income', '2023-01-16 09:10:00', '2023-01-16 09:10:00'),
-(204, 101, 'Utilities', 'expense', '2023-01-16 09:15:00', '2023-01-16 09:15:00'),
-(205, 101, 'Freelance Project', 'income', '2023-01-16 09:20:00', '2023-01-16 09:20:00'),
-(206, 101, 'Dining Out', 'expense', '2023-01-16 09:25:00', '2023-01-16 09:25:00'),
-(207, 102, 'Food', 'expense', '2023-02-02 10:00:00', '2023-02-02 10:00:00'),
-(208, 102, 'Transportation', 'expense', '2023-02-02 10:05:00', '2023-02-02 10:05:00'),
-(209, 102, 'Paycheck', 'income', '2023-02-02 10:10:00', '2023-02-02 10:10:00');
+-- CHANGE THE user_id to the ID's in ur postgre
+-- User 101: Sarah's Categories
+(6, 'Paycheck', 'income'),
+(6, 'Bonus', 'income'),
+(6, 'Groceries', 'expense'),
+-- User 102: John's Categories
+(7, 'Paycheck', 'income'),
+(7, 'Utilities', 'expense'),
+(7, 'Food', 'expense');
 
 -- ========== TRANSACTIONS ==========
-INSERT INTO transactions (id, user_id, category_id, amount, type, description, transaction_date, created_at, updated_at)
+INSERT INTO transactions (user_id, category_id, amount, type, description, transaction_date)
 VALUES
-(301, 101, 203, 2500.00, 'income', 'Monthly Salary', '2023-11-01', '2023-11-01 10:00:00', '2023-11-01 10:00:00'),
-(302, 101, 202, 1200.00, 'expense', 'Monthly Rent', '2023-11-01', '2023-11-01 10:05:00', '2023-11-01 10:05:00'),
-(303, 101, 201, 75.50, 'expense', 'Weekly groceries at SuperMart', '2023-11-03', '2023-11-03 14:10:00', '2023-11-03 14:10:00'),
-(304, 101, 206, 45.00, 'expense', 'Dinner with friends', '2023-11-04', '2023-11-04 20:30:00', '2023-11-04 20:30:00'),
-(305, 101, 204, 80.00, 'expense', 'Electricity bill', '2023-11-07', '2023-11-07 11:00:00', '2023-11-07 11:00:00'),
-(306, 101, 201, 60.25, 'expense', 'Mid-week grocery run', '2023-11-08', '2023-11-08 17:45:00', '2023-11-08 17:45:00'),
-(307, 101, 205, 750.00, 'income', 'Client project payment', '2023-11-10', '2023-11-10 09:00:00', '2023-11-10 09:00:00'),
-(308, 102, 207, 55.00, 'expense', 'Lunch', '2023-11-02', '2023-11-02 13:00:00', '2023-11-02 13:00:00'),
-(309, 102, 209, 3000.00, 'income', 'Monthly Paycheck', '2023-11-05', '2023-11-05 09:00:00', '2023-11-05 09:00:00'),
-(310, 101, 206, 20.00, 'expense', 'Coffee and pastry', '2023-11-12', '2023-11-12 11:15:00', '2023-11-12 11:15:00');
+-- CHANGE THE USER_ID and CATEGORY_ID to the ID's in ur postgre
+-- --- NOVEMBER 2024 ---
+(6, 8, 2550.00, 'income', 'Monthly Paycheck Deposit', '2024-11-01'),
+(6, 9, 510.00, 'income', 'Performance Bonus', '2024-11-15'),
+(6, 10, 345.00, 'expense', 'Monthly grocery expense sum', '2024-11-20'),
+(7, 11, 2980.00, 'income', 'Monthly Paycheck Deposit', '2024-11-01'),
+(7, 12, 125.00, 'expense', 'Monthly Utility Payment (Water/Gas/Elec)', '2024-11-10'),
+(7, 13, 260.00, 'expense', 'Sum of dining and food expenses', '2024-11-25'),
+
+-- --- DECEMBER 2024 ---
+(6, 8, 2480.00, 'income', 'Monthly Paycheck Deposit (Slightly less)', '2024-12-01'),
+(6, 9, 490.00, 'income', 'Holiday Bonus', '2024-12-15'),
+(6, 10, 360.00, 'expense', 'Monthly grocery expense sum (Higher due to holidays)', '2024-12-20'),
+(7, 11, 3020.00, 'income', 'Monthly Paycheck Deposit (Slightly more)', '2024-12-01'),
+(7, 12, 115.00, 'expense', 'Monthly Utility Payment (Lower usage)', '2024-12-10'),
+(7, 13, 240.00, 'expense', 'Sum of dining and food expenses', '2024-12-25'),
+
+-- --- JANUARY 2025 ---
+(6, 8, 2520.00, 'income', 'Monthly Paycheck Deposit', '2025-01-01'),
+(6, 9, 520.00, 'income', 'Small Project Bonus', '2025-01-15'),
+(6, 10, 330.00, 'expense', 'Monthly grocery expense sum (Post-holiday dip)', '2025-01-20'),
+(7, 11, 2950.00, 'income', 'Monthly Paycheck Deposit (Project delay)', '2025-01-01'),
+(7, 12, 130.00, 'expense', 'Monthly Utility Payment (Heating costs)', '2025-01-10'),
+(7, 13, 270.00, 'expense', 'Sum of dining and food expenses', '2025-01-25'),
+
+-- --- FEBRUARY 2025 ---
+(6, 8, 2490.00, 'income', 'Monthly Paycheck Deposit', '2025-02-01'),
+(6, 9, 505.00, 'income', 'Small Bonus', '2025-02-15'),
+(6, 10, 375.00, 'expense', 'Monthly grocery expense sum (highest fluctuation)', '2025-02-20'),
+(7, 11, 3050.00, 'income', 'Monthly Paycheck Deposit (Extra shift)', '2025-02-01'),
+(7, 12, 110.00, 'expense', 'Monthly Utility Payment', '2025-02-10'),
+(7, 13, 230.00, 'expense', 'Sum of dining and food expenses (Low)', '2025-02-25'),
+
+-- --- MARCH 2025 ---
+(6, 8, 2510.00, 'income', 'Monthly Paycheck Deposit', '2025-03-01'),
+(6, 9, 480.00, 'income', 'End of Quarter Bonus (Lower)', '2025-03-15'),
+(6, 10, 350.00, 'expense', 'Monthly grocery expense sum (Back to average)', '2025-03-20'),
+(7, 11, 2990.00, 'income', 'Monthly Paycheck Deposit', '2025-03-01'),
+(7, 12, 122.00, 'expense', 'Monthly Utility Payment', '2025-03-10'),
+(7, 13, 250.00, 'expense', 'Sum of dining and food expenses', '2025-03-25');
 
 -- ========== BUDGETS ==========
-INSERT INTO budgets (id, user_id, category_id, budget_amount, start_date, end_date, created_at, updated_at)
+INSERT INTO budgets (user_id, category_id, budget_amount, start_date, end_date)
 VALUES
-(401, 101, 201, 300.00, '2023-11-01', '2023-11-30', '2023-10-25 10:00:00', '2023-10-25 10:00:00'),
-(402, 101, 206, 150.00, '2023-11-01', '2023-11-30', '2023-10-25 10:05:00', '2023-10-25 10:05:00'),
-(403, 101, 204, 100.00, '2023-11-01', '2023-11-30', '2023-10-25 10:10:00', '2023-10-25 10:10:00');
+-- CHANGE THE USER_ID and CATEGORY_ID to the ID's in ur postgre
+-- User 101: Groceries Budget $350/month for 5 months
+(6, 10, 350.00, '2024-11-01', '2024-11-30'),
+(6, 10, 350.00, '2024-12-01', '2024-12-31'),
+(6, 10, 350.00, '2025-01-01', '2025-01-31'),
+(6, 10, 350.00, '2025-02-01', '2025-02-28'),
+(6, 10, 350.00, '2025-03-01', '2025-03-31');

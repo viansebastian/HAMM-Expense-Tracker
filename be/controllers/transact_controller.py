@@ -1,12 +1,14 @@
 # Transactions Controller File
 
 import models
+import numpy as np 
 from db import SessionLocal
 from utils.common import check_exists
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.sql import func
 from datetime import datetime
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from sklearn.linear_model import LinearRegression
 
 
 transact_bp = Blueprint("transact_bp", __name__, url_prefix="/transactions")
@@ -187,3 +189,118 @@ def group_transacts_by_type_cat():
 
     finally:
         db.close()
+
+
+@transact_bp.route("/predict/type", methods=["GET"])
+@jwt_required()
+def predict_by_type(): 
+    db = SessionLocal() 
+    user_id = int(get_jwt_identity())
+    
+    tx_type = request.args.get("type")
+    if tx_type not in ["income", "expense"]: 
+        return jsonify({"error": "Invalid type"}), 400
+    
+    try: 
+        transactions = (
+            db.query(models.Transaction)
+            .filter(
+                models.Transaction.user_id == user_id, 
+                models.Transaction.type == tx_type
+            )
+            .all()
+        )
+        if not transactions:
+            return jsonify({"error": "No transactions found"}), 404
+        
+        monthly = {} 
+        for t in transactions: 
+            ym = extract_year_month(t.transaction_date)
+            monthly[ym] = monthly.get(ym, 0) + t.amount
+        
+        if len(monthly) < 3: 
+            return jsonify({"error": "Not enough data. Need more than 3 months"}), 400
+        
+        sorted_items = sorted(monthly.items())
+        months_idx = list(range(len(sorted_items)))
+        amounts = [amt for _, amt in sorted_items]
+        
+        predictions = predict_linear_reg(months_idx, amounts, future=2)
+        
+        return jsonify({
+            "history": sorted_items, 
+            "predicted_next_months": predictions
+        }), 200
+            
+    except Exception as e: 
+        print("Prediction error: ", str(e))
+        return jsonify({"error": f"Prediction Failed: {str(e)}"}), 500
+    
+    finally: 
+        db.close()
+
+
+@transact_bp.route("/predict/type-category", methods=["GET"])
+@jwt_required()
+def predict_by_type_category():
+    db = SessionLocal() 
+    user_id = int(get_jwt_identity())
+    
+    category_id = request.args.get("category_id", type=int)
+    
+    if category_id is None: 
+        return jsonify({"error": "category_id is required"}), 400
+    
+    try: 
+        transactions = (
+            db.query(models.Transaction)
+            .filter(
+                models.Transaction.user_id == user_id, 
+                models.Transaction.category_id == category_id
+            )
+            .all()
+        )
+        if not transactions: 
+            return jsonify({"error": "No data for this category"}), 404
+        
+        monthly = {}
+        for t in transactions: 
+            ym = extract_year_month(t.transaction_date)
+            monthly[ym] = monthly.get(ym, 0) + t.amount
+            
+        if len(monthly) < 3: 
+            return jsonify({"error": "Not enough data. Need more than 3 months."}), 400 
+        
+        sorted_items = sorted(monthly.items())
+        months_idx = list(range(len(sorted_items)))
+        amounts = [amt for _, amt in sorted_items]
+        
+        predictions = predict_linear_reg(months_idx, amounts, future=2)
+
+        return jsonify({
+            "history": sorted_items, 
+            "predicted_next_months": predictions
+        }), 200 
+        
+    except Exception as e: 
+        print("prediction category error: ", str(e))
+        return jsonify({"error": "Failed to predict"}), 500
+    
+    finally: 
+        db.close()
+    
+
+def predict_linear_reg(months_list, amounts_list, future=2): 
+    x = np.array(months_list).reshape(-1, 1)
+    y = np.array(amounts_list)
+    
+    model = LinearRegression() 
+    model.fit(x, y)
+    
+    future_x = np.arange(len(months_list), len(months_list) + future).reshape(-1, 1)
+    predicted = model.predict(future_x)
+    
+    return predicted.tolist() 
+
+def extract_year_month(date_obj): 
+    return date_obj.year * 100 + date_obj.month

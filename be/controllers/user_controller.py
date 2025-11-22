@@ -135,7 +135,10 @@ def login_user():
     
     user = db.query(models.User).filter(models.User.email == email).first()
     
-    if not user or not check_password_hash(user.password_hash, password):
+    # if not user or not check_password_hash(user.password_hash, password):
+    #     return jsonify({"error": "Invalid email or password"}), 401
+    
+    if not user or not (user.password_hash == password): 
         return jsonify({"error": "Invalid email or password"}), 401
     
     access_token = create_access_token(
