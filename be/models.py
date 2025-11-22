@@ -77,7 +77,6 @@ class Category(Base):
     budgets = relationship("Budget", back_populates="category")
     
     
-
 class Budget(Base):
     __tablename__ = "budgets"
 
