@@ -20,3 +20,8 @@ def load_all_user_data():
         st.session_state.transactions = get_transactions()
         st.session_state.budgets = get_budgets()
         st.session_state.refresh = False
+
+def logout():
+    for key in ["jwt", "user_id", "welcome_done", "logged_in"]:
+        if key in st.session_state:
+            del st.session_state[key]

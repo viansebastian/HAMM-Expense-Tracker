@@ -9,17 +9,25 @@ def login_page():
     pw = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        r = login(email, pw)
+        try:
+            r = login(email, pw)
 
-        if r.status_code == 200:
-            data = r.json()
+            if r.status_code == 200:
+                data = r.json()
+                st.session_state.jwt = data["access_token"]
+                st.session_state.user_id = data["user_id"]
+                st.session_state.logged_in = True
+                st.success("Logged in!")
+                st.rerun()
 
-            st.session_state.jwt = data["access_token"]
-            st.session_state.user_id = data["user_id"]
-            st.experimental_rerun()
+            else:
+                st.error(f"Login failed ({r.status_code})")
+                st.code(r.text)   # full backend error message
 
-        else:
-            st.error("Invalid credentials")
+        except Exception as e:
+            st.error("⚠️ Something went wrong.")
+            st.exception(e)
+
 
 
 def run():

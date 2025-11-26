@@ -13,6 +13,7 @@ from controllers.category_controller import category_bp
 
 load_dotenv()
 JWT_SECRET = os.getenv("JWT_SECRET")
+print(JWT_SECRET)
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = JWT_SECRET

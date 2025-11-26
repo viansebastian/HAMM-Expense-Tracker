@@ -9,6 +9,17 @@ st.set_page_config(page_title="HAMM", layout="wide")
 if "jwt" not in st.session_state:
     login_page()
     st.stop()
+    
+
+# Logged in but not past welcome page → show Hello World
+if "welcome_done" not in st.session_state:
+    st.title("🎉 Hello, world!")
+    st.write("You have successfully logged in.")
+
+    if st.button("Continue to App"):
+        st.session_state.welcome_done = True
+
+    st.stop()
 
 # Load user data once after login
 load_all_user_data()
