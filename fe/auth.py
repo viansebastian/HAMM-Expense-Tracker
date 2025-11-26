@@ -11,8 +11,6 @@ def login_page():
     if st.button("Login"):
         try:
             r = login(email, pw)
-        try:
-            r = login(email, pw)
 
             if r.status_code == 200:
                 data = r.json()
