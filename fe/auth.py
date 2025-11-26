@@ -11,6 +11,8 @@ def login_page():
     if st.button("Login"):
         try:
             r = login(email, pw)
+        try:
+            r = login(email, pw)
 
             if r.status_code == 200:
                 data = r.json()
@@ -39,9 +41,12 @@ def run():
     last_name = st.text_input("Last Name")
 
     if st.button("Register"):
-        r = register(email, password, first_name, last_name)
+        try:
+            r = register(email, password, first_name, last_name)
 
-        if r.status_code == 200:
-            st.success("Registration successful. Please go to Login page.")
-        else:
-            st.error("Server error")
+            if r.status_code == 200:
+                st.success("Registration successful. Please go to Login page.")
+            else:
+                st.error("Server error")
+        except Exception as e:
+            st.error(f"Exception occurred: {e}")
