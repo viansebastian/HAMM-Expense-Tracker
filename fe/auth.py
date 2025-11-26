@@ -9,17 +9,17 @@ def login_page():
     pw = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        r = login(email, pw)
+        try:
+            r = login(email, pw)
 
-        if r.status_code == 200:
-            data = r.json()
-
-            st.session_state.jwt = data["access_token"]
-            st.session_state.user_id = data["user_id"]
-            st.experimental_rerun()
-
-        else:
-            st.error("Invalid credentials")
+            if r.status_code == 200:
+                data = r.json()
+                st.session_state.jwt = data["access_token"]
+                st.session_state.user_id = data["user_id"]
+            else:
+                st.error("Invalid credentials")
+        except Exception as e:
+            st.error(f"Exception occurred: {e}")
 
 
 def run():
@@ -31,9 +31,12 @@ def run():
     last_name = st.text_input("Last Name")
 
     if st.button("Register"):
-        r = register(email, password, first_name, last_name)
+        try:
+            r = register(email, password, first_name, last_name)
 
-        if r.status_code == 200:
-            st.success("Registration successful. Please go to Login page.")
-        else:
-            st.error("Server error")
+            if r.status_code == 200:
+                st.success("Registration successful. Please go to Login page.")
+            else:
+                st.error("Server error")
+        except Exception as e:
+            st.error(f"Exception occurred: {e}")
