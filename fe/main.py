@@ -35,7 +35,7 @@ if section == "Dashboard":
     dashboard.render()
 
 elif section == "Transactions":
-    transactions.render()
+    transactions.render(section)
 
 elif section == "Analytics":
     analytics.render()
