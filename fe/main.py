@@ -1,5 +1,5 @@
 import streamlit as st
-from auth import login_page
+from auth import login_page, register_user
 from state_manager import load_all_user_data
 from sections import dashboard, analytics, transactions, budget, settings    # your sidebar + pages
 
@@ -8,6 +8,7 @@ st.set_page_config(page_title="HAMM", layout="wide")
 # If not logged in -> login screen
 if "jwt" not in st.session_state:
     login_page()
+    register_user()
     st.stop()
     
 
