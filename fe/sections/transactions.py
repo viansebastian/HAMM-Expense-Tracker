@@ -10,7 +10,6 @@ def render(current_page):
     Renders the unified Transactions page, including the Add Form and the View/Edit Table.
     """
     
-    # Access necessary state variables
     df = st.session_state.get('transactions_df', pd.DataFrame())
     user_id = st.session_state.get('user_id', 6)
     token = st.session_state.get('jwt', 'MOCK_TOKEN') 
