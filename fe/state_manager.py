@@ -2,6 +2,31 @@ import streamlit as st
 from services.api import get_budgets, get_categories, get_transactions
 
 
+def transform_transaction_data(transactions_list):
+    """Converts API transaction list into a clean DataFrame for the UI."""
+    if not transactions_list:
+        return pd.DataFrame(columns=['Date', 'Type', 'Category', 'Amount', 'Description'])
+
+    df = pd.DataFrame(transactions_list)
+
+    # 1. Rename columns to match UI expectations (Date, Category, Amount)
+    # The API returns lowercase keys; the frontend requires capitalized keys.
+    df.rename(columns={
+        'transaction_date': 'Date',
+        'category_id': 'Category',  # Assuming the backend returns category NAME for display
+        'amount': 'Amount',
+        'type': 'Type',
+        'description': 'Description'
+    }, inplace=True)
+    
+    # 2. Ensure correct data types for plotting/calculation
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['Amount'] = pd.to_numeric(df['Amount'], errors='coerce')
+    df['Type'] = df['Type'].str.capitalize()
+    
+    # Filter to only keep necessary columns, ensuring consistent order
+    return df[['Date', 'Type', 'Category', 'Amount', 'Description']]
+
 def load_all_user_data():
     token = st.session_state.jwt
     if "categories" not in st.session_state:
