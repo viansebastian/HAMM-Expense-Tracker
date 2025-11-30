@@ -390,7 +390,7 @@ def render():
         df_exp = pd.DataFrame(expense_dist)
         df_exp['amount'] = pd.to_numeric(df_exp['amount'], errors='coerce') 
         fig_pie = px.pie(df_exp, names="category_name", values="amount", hole=0.45)
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_pie, width='stretch')
     else:
         st.info("No expense data found in the selected range.")
 
@@ -407,7 +407,7 @@ def render():
         df_month["expense"] = pd.to_numeric(df_month.get("expense", 0), errors='coerce')
 
         fig_line = px.line(df_month, x="month", y=["income", "expense"], markers=True)
-        st.plotly_chart(fig_line, use_container_width=True)
+        st.plotly_chart(fig_line, width='stretch')
     else:
         st.info("No monthly data available in the selected range.")
 
@@ -429,6 +429,6 @@ def render():
             if 'transaction_date' in display_df.columns:
                  # Drop the temporary normalized date for display, if it exists
                  display_df = display_df.drop(columns=['transaction_date'], errors='ignore')
-            st.dataframe(display_df, use_container_width=True, height=350)
+            st.dataframe(display_df, width='stretch', height=350)
         else:
             st.warning("No matching transactions.")
