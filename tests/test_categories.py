@@ -4,7 +4,6 @@ from flask import Flask
 from datetime import datetime
 from flask_jwt_extended import JWTManager 
 
-# IMPORTS: Change this if your file is named differently
 from be.controllers.category_controller import category_bp
 from be import models 
 
@@ -76,7 +75,6 @@ def test_get_categories_success(client, mock_db_session, mock_jwt):
     assert data[0]["name"] == "Groceries"
     assert data[0]["type"] == "expense"
 
-
 def test_create_category_success(client, mock_db_session, mock_jwt, mock_check_exists):
     mock_user = MagicMock()
     mock_user.id = 1
@@ -99,7 +97,6 @@ def test_create_category_success(client, mock_db_session, mock_jwt, mock_check_e
     mock_db_session.add.assert_called_once()
     mock_db_session.commit.assert_called_once()
 
-
 def test_create_category_already_exists(client, mock_db_session, mock_jwt):
     """Test that it returns 400 if check_exists returns True."""
     mock_user = MagicMock()
@@ -116,7 +113,6 @@ def test_create_category_already_exists(client, mock_db_session, mock_jwt):
 
     assert response.status_code == 400
     assert "already exists" in response.get_json()["error"]
-
 
 def test_update_category_success(client, mock_db_session, mock_jwt):
     mock_user = MagicMock()
@@ -142,7 +138,6 @@ def test_update_category_success(client, mock_db_session, mock_jwt):
     assert mock_cat.name == "New Name"
     mock_db_session.commit.assert_called_once()
 
-
 def test_update_category_not_found_or_forbidden(client, mock_db_session, mock_jwt):
     """Test trying to update a category that doesn't belong to the user."""
     mock_user = MagicMock()
@@ -158,7 +153,6 @@ def test_update_category_not_found_or_forbidden(client, mock_db_session, mock_jw
 
     assert response.status_code == 404
     assert "Category not found" in response.get_json()["error"]
-
 
 def test_delete_category_success(client, mock_db_session, mock_jwt):
     mock_user = MagicMock()

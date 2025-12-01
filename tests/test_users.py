@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 from flask import Flask
 from flask_jwt_extended import JWTManager
 
-# IMPORTS: Update if your controller file is named differently
 from be.controllers.user_controller import user_bp
 from be import models 
 
@@ -54,7 +53,6 @@ def test_get_users_success(client, mock_db_session):
     assert data[0]["email"] == "test@example.com"
     assert data[0]["first_name"] == "John"
 
-
 def test_create_user_success(client, mock_db_session, mock_check_exists):
     payload = {
         "email": "new@example.com",
@@ -72,7 +70,6 @@ def test_create_user_success(client, mock_db_session, mock_check_exists):
     mock_db_session.add.assert_called_once()
     mock_db_session.commit.assert_called_once()
 
-
 def test_create_user_already_exists(client, mock_db_session):
     # Force check_exists to return True
     with patch("be.controllers.user_controller.check_exists", return_value=True):
@@ -85,7 +82,6 @@ def test_create_user_already_exists(client, mock_db_session):
     assert response.status_code == 200 # Note: Your code returns 200 with error key, not 400 or 409
     assert "User with this email already exists" in response.get_json()["error"]
     mock_db_session.add.assert_not_called()
-
 
 def test_update_user_success(client, mock_db_session):
     mock_user = MagicMock()
@@ -106,7 +102,6 @@ def test_update_user_success(client, mock_db_session):
     assert mock_user.email == "updated@example.com"
     mock_db_session.commit.assert_called_once()
 
-
 def test_delete_user_success(client, mock_db_session):
     mock_user = MagicMock()
     mock_user.id = 1
@@ -119,7 +114,6 @@ def test_delete_user_success(client, mock_db_session):
     assert "deleted successfully" in response.get_json()["message"]
     mock_db_session.delete.assert_called_once_with(mock_user)
     mock_db_session.commit.assert_called_once()
-
 
 def test_login_success(client, mock_db_session):
     """
@@ -145,7 +139,6 @@ def test_login_success(client, mock_db_session):
     data = response.get_json()
     assert "access_token" in data
     assert data["message"] == "Login successful"
-
 
 def test_login_failure_wrong_password(client, mock_db_session):
     mock_user = MagicMock()

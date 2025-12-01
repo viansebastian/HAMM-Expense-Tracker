@@ -4,7 +4,6 @@ from flask import Flask
 from datetime import datetime
 from flask_jwt_extended import JWTManager
 
-# IMPORTS: Update if your controller file is named differently
 from be.controllers.budget_controller import budget_bp
 from be import models 
 
@@ -77,7 +76,6 @@ def test_get_budgets_success(client, mock_db_session, mock_jwt):
     assert data[0]["budget_amount"] == 500000.0
     assert "start_date" in data[0]
 
-
 def test_create_budget_success(client, mock_db_session, mock_jwt, mock_check_exists):
     mock_user = MagicMock()
     mock_user.id = 1
@@ -101,7 +99,6 @@ def test_create_budget_success(client, mock_db_session, mock_jwt, mock_check_exi
     mock_db_session.add.assert_called_once()
     mock_db_session.commit.assert_called_once()
 
-
 def test_create_budget_duplicate(client, mock_db_session, mock_jwt):
     mock_user = MagicMock()
     mock_user.id = 1
@@ -119,7 +116,6 @@ def test_create_budget_duplicate(client, mock_db_session, mock_jwt):
 
     assert response.status_code == 400
     assert "budget already exists" in response.get_json()["error"]
-
 
 def test_update_budget_success(client, mock_db_session, mock_jwt):
     mock_user = MagicMock()
@@ -151,7 +147,6 @@ def test_update_budget_success(client, mock_db_session, mock_jwt):
     assert mock_budget.budget_amount == 75000.0
     mock_db_session.commit.assert_called_once()
 
-
 def test_update_budget_not_found(client, mock_db_session, mock_jwt):
     mock_user = MagicMock()
     mock_user.id = 1
@@ -166,7 +161,6 @@ def test_update_budget_not_found(client, mock_db_session, mock_jwt):
 
     assert response.status_code == 404
     assert "Budget not found" in response.get_json()["error"]
-
 
 def test_delete_budget_success(client, mock_db_session, mock_jwt):
     mock_user = MagicMock()
