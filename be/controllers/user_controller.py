@@ -1,8 +1,8 @@
 # Users Controller File
 
-import models
-from db import SessionLocal
-from utils.common import check_exists
+from be import models
+from be.db import SessionLocal
+from be.utils.common import check_exists
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token
 from werkzeug.security import generate_password_hash, check_password_hash

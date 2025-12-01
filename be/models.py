@@ -14,7 +14,7 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import relationship
-from db import Base
+from be.db import Base
 
 
 class TransactionType(str, enum.Enum):
