@@ -1,6 +1,6 @@
 import streamlit as st
-from services.api import get_budgets, get_categories, get_transactions
 import pandas as pd
+from services.api import get_budgets, get_categories, get_transactions
 
 
 def transform_transaction_data(transactions_list):

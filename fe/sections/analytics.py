@@ -158,7 +158,7 @@ def render_predictions_section_new(token):
     """Renders the advanced AI prediction section with line charts."""
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""
-    <div style="padding:18px; border-radius:12px; background:#fafafa; border:1px solid #eee; margin-bottom:25px;">
+    <div style="padding:18px; border-radius:12px; background:#d9d9d9; border:1px solid #eee; margin-bottom:25px;">
             <h3 style="margin-top:0;">🔮 2-Month Transaction Prediction (AI) </h3>
         </div>
     """, unsafe_allow_html=True)
@@ -277,43 +277,83 @@ def render():
     # ---------------------------
     # LOAD DATA FROM SESSION STATE (NO REDUNDANT API CALLS)
     # ---------------------------
-    
-    if "transactions" not in st.session_state or "categories" not in st.session_state:
-        st.error("Data not loaded into session state. Ensure `load_all_user_data()` runs on startup.")
+    if not token:
+        st.error("No JWT token in session; cannot fetch transactions.")
         return
-    
-    
-    transactions = st.session_state.transactions
-    categories = st.session_state.categories
 
+    # current stored values (may be Response objects or lists)
+    transactions = st.session_state.get("transactions", [])
+    categories = st.session_state.get("categories", [])
+
+    # normalize to lists if already lists, else keep as-is for debugging
     if not isinstance(transactions, list):
         transactions = []
+
     if not isinstance(categories, list):
         categories = []
-        
-    # # Unwrap and check Response objects
-    # tx_res = st.session_state.transactions
-    # cat_res = st.session_state.categories
-    
-    # try:
-    #     if tx_res.status_code != 200:
-    #         st.error(f"Failed to fetch transactions from API cache: {tx_res.text}")
-    #         return
-    #     if cat_res.status_code != 200:
-    #         st.error(f"Failed to fetch categories from API cache: {cat_res.text}")
-    #         return
 
-    #     transactions = tx_res.json()
-    #     categories = cat_res.json()
-
-    # except Exception as e:
-    #     st.error(f"Error processing cached data: {e}")
-    #     return
-
+    # If no transactions, try to re-fetch
     if not transactions:
-        st.warning("No transactions found.")
-        render_predictions_section_new(token) 
-        return
+        # update to your import path
+
+        refreshed = get_transactions(token)
+
+        # DEBUG: print type and repr so you see exactly what's returned
+        print("DEBUG refreshed type:", type(refreshed))
+        try:
+            print("DEBUG refreshed repr:", repr(refreshed)[:2000])  # avoid huge prints
+        except Exception as e:
+            print("DEBUG repr error:", e)
+
+        # Handle common return shapes:
+        # 1) requests.Response object
+        if hasattr(refreshed, "status_code"):
+            print("DEBUG response.status_code:", refreshed.status_code)
+            try:
+                body = refreshed.json()
+                print("DEBUG response.json() type:", type(body))
+            except Exception as e:
+                body = None
+                print("DEBUG response.json() failed:", e)
+
+            if refreshed.status_code == 200 and isinstance(body, list) and len(body) > 0:
+                transactions = body
+                st.session_state["transactions"] = body
+            elif refreshed.status_code == 200 and isinstance(body, dict):
+                # maybe API returns {"transactions": [...]}
+                if "transactions" in body and isinstance(body["transactions"], list):
+                    transactions = body["transactions"]
+                    st.session_state["transactions"] = transactions
+                else:
+                    print("DEBUG response 200 but unexpected body keys:", list(body.keys()))
+            else:
+                st.warning(f"API returned status {refreshed.status_code}. See console for details.")
+                print("DEBUG response.text:", getattr(refreshed, "text", None))
+
+        # 2) direct list from wrapper
+        elif isinstance(refreshed, list):
+            if len(refreshed) > 0:
+                transactions = refreshed
+                st.session_state["transactions"] = refreshed
+            else:
+                print("DEBUG refreshed list is empty")
+
+        # 3) dict shaped return
+        elif isinstance(refreshed, dict):
+            if "transactions" in refreshed and isinstance(refreshed["transactions"], list) and refreshed["transactions"]:
+                transactions = refreshed["transactions"]
+                st.session_state["transactions"] = transactions
+            else:
+                print("DEBUG refreshed dict keys:", list(refreshed.keys()))
+
+        else:
+            print("DEBUG refreshed is None or unknown type")
+
+        # Final fallback
+        if not transactions:
+            st.warning("No transactions found after re-fetch. Check backend/API, token, and server logs.")
+            render_predictions_section_new(token)
+            return
 
     # ---------------------------
     # Attach category names
@@ -326,17 +366,25 @@ def render():
 
     df_all = pd.DataFrame(transactions_all)
     
-    
-
     # ======================================================
     # FILTER BAR UI
-    # ======================================================
-    st.markdown("""
-    <div style="padding:18px; border-radius:12px; background:#fafafa; 
-                  border:1px solid #eee; margin-bottom:25px;">
-        <h3 style="margin-top:0;">🔍 Filters </h3>
+    # =====================================================    
+    st.markdown(
+    """
+    <div style="
+        padding:18px; 
+        border-radius:12px; 
+        background: #d9d9d9; 
+        border:1px solid #d6d6d6;
+        box-shadow:0 1px 3px rgba(0,0,0,0.08);
+        margin-bottom:25px;
+    ">
+        <h3 style="margin-top:0;">🔍 Filters</h3>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+    )
+
 
     with st.container():
         # Ensure we have valid dates before calculating min/max
@@ -451,7 +499,7 @@ def render():
     # ======================================================
     
     st.markdown("""
-    <div style="padding:18px; border-radius:12px; background:#fafafa; 
+    <div style="padding:18px; border-radius:12px; background:#d9d9d9; 
                   border:1px solid #eee; margin-bottom:25px;">
         <h3 style="margin-top:0;">📊 Detailed Breakdown </h3>
     </div>
@@ -558,7 +606,7 @@ def render():
     # MONTHLY TREND CHART (Full Width)
     # ======================================================
     st.markdown("""
-        <div style="padding:18px; border-radius:12px; background:#fafafa; 
+        <div style="padding:18px; border-radius:12px; background:#d9d9d9; 
                     border:1px solid #eee; margin-bottom:25px;">
             <h3 style="margin-top:0;">📈 Monthly Income vs Expense </h3>
         </div>

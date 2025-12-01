@@ -61,38 +61,61 @@ def create_transact():
     db = SessionLocal()
     user_id = int(get_jwt_identity())    
     user = db.query(models.User).filter(models.User.id == user_id).first()
+    
     if not user: 
         return jsonify({"error": "User not found"}), 404
     
     data = request.get_json()
-    
+
+    # 1️⃣ Validate category exists and belongs to this user (unless admin)
+    category = db.query(models.Category).filter(models.Category.id == data["category_id"]).first()
+
+    if not category:
+        return jsonify({"error": "Category not found"}), 400
+
+    if user.role != "admin" and category.user_id != user_id:
+        return jsonify({"error": "You do not have access to this category"}), 403
+
+    # 2️⃣ Validate category type matches transaction type
+    # Example: category.type = "expense" but user inputs "income"
+    input_type = models.TransactionType(data["type"].lower())
+
+    if category.type.value.lower() != input_type.value.lower():
+        return jsonify({
+            "error": f"Category type mismatch: '{category.name}' is '{category.type.value}', "
+                     f"but you submitted '{input_type.value}'"
+        }), 400
+
+    # 3️⃣ Prepare fields
     checker = {
         "user_id": user_id,
         "category_id": data["category_id"],
         "amount": data["amount"],
         "description": data.get("description"),
-        "type": models.TransactionType(data["type"].lower()),
+        "type": input_type,
         "transaction_date": datetime.strptime(data["transaction_date"], "%d-%m-%Y"),
     }
 
+    # 4️⃣ Check if transaction already exists
     if check_exists(db, models.Transaction, checker):
-        return jsonify({"error": "this transaction already exists"}), 400
+        return jsonify({"error": "This transaction already exists"}), 400
 
+    # 5️⃣ Create the transaction
     new_transact = models.Transaction(**checker)
 
     try:
         db.add(new_transact)
         db.commit()
         db.refresh(new_transact)
-        response = jsonify(
-            {"message": f"New Transaction added with ID {new_transact.id}"}
-        )
+        response = jsonify({"message": f"New Transaction added with ID {new_transact.id}"})
         status_code = 201
+
     except Exception as e:
         print(f"Error adding transaction: {e}")
         db.rollback()
         response = jsonify({"error": "Failed to add transaction"})
         status_code = 400
+
     finally:
         db.close()
 
