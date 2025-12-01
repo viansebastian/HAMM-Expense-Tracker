@@ -1,4 +1,5 @@
 import streamlit as st
+import services.api
 from auth import login_page, register_user
 from state_manager import load_all_user_data
 from sections import dashboard, analytics, transactions, budget, settings    # your sidebar + pages

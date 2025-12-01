@@ -282,23 +282,33 @@ def render():
         st.error("Data not loaded into session state. Ensure `load_all_user_data()` runs on startup.")
         return
     
-    tx_res = st.session_state.transactions
-    cat_res = st.session_state.categories
     
-    try:
-        if tx_res.status_code != 200:
-            st.error(f"Failed to fetch transactions from API cache: {tx_res.text}")
-            return
-        if cat_res.status_code != 200:
-            st.error(f"Failed to fetch categories from API cache: {cat_res.text}")
-            return
+    transactions = st.session_state.transactions
+    categories = st.session_state.categories
 
-        transactions = tx_res.json()
-        categories = cat_res.json()
+    if not isinstance(transactions, list):
+        transactions = []
+    if not isinstance(categories, list):
+        categories = []
+        
+    # # Unwrap and check Response objects
+    # tx_res = st.session_state.transactions
+    # cat_res = st.session_state.categories
+    
+    # try:
+    #     if tx_res.status_code != 200:
+    #         st.error(f"Failed to fetch transactions from API cache: {tx_res.text}")
+    #         return
+    #     if cat_res.status_code != 200:
+    #         st.error(f"Failed to fetch categories from API cache: {cat_res.text}")
+    #         return
 
-    except Exception as e:
-        st.error(f"Error processing cached data: {e}")
-        return
+    #     transactions = tx_res.json()
+    #     categories = cat_res.json()
+
+    # except Exception as e:
+    #     st.error(f"Error processing cached data: {e}")
+    #     return
 
     if not transactions:
         st.warning("No transactions found.")

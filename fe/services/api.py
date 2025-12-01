@@ -113,23 +113,13 @@ def predict_by_type_category(token, category_id):
 
 # ========== CATEGORY ==========
 def get_categories(token: str):
-    """GET /categories. Returns a list of category dictionaries or an empty list on failure."""
+    """GET /categories. Returns the Response object."""
     url = f"{API_URL}/categories"
-    
     try:
-        response = requests.get(url, headers=auth_header(token))
-        
-        if response.status_code == 200:
-            # CRITICAL FIX: Return the JSON-parsed content
-            return response.json()
-        else:
-            print(f"API Error fetching categories. Status: {response.status_code}. Response: {response.text}")
-            return []
-            
+        return requests.get(url, headers=auth_header(token))
     except requests.exceptions.RequestException as e:
-        # Handle network or connection errors
         print(f"Network error fetching categories: {e}")
-        return []
+        return None
 
 def create_category(token: str, name: str, type_value: str, user_id: int = None):
     """
