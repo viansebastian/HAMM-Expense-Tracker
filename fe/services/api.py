@@ -149,12 +149,13 @@ def delete_category(token: str, category_id: int):
     return requests.delete(url, headers=auth_header(token))
 
 # ========== BUDGET ==========
-def get_budgets(token=None):
-    resp = requests.get(f"{API_URL}/budgets", headers=auth_header(token))
-    try:
-        return resp.json()
-    except:
-        return {"error": "Invalid JSON", "raw": str(resp)}
+def get_budgets(token: str) -> requests.Response:
+    """
+    GET /budgets
+    Retrieves all budgets for the current user (or all budgets if admin).
+    """
+    url = f"{API_URL}/budgets"
+    return requests.get(url, headers=auth_header(token))
 
 def create_budget(
     token: str,
@@ -183,12 +184,22 @@ def create_budget(
 
     return requests.post(url, json=payload, headers=auth_header(token))
 
-def update_budget(token, budget_id, data):
-    return requests.put(
-        f"{API_URL}/budgets/{budget_id}",
-        json=data,
-        headers=auth_header(token)
-    ).json()
+def update_budget(
+    token: str,
+    budget_id: int,
+    data: dict[str, any]
+) -> requests.Response:
+    """
+    PUT /budgets/<id>
+    data can contain:
+    { 
+        "budget_amount": float, 
+        "start_date": "DD-MM-YYYY", 
+        "end_date": "DD-MM-YYYY" 
+    }
+    """
+    url = f"{API_URL}/budgets/{budget_id}"
+    return requests.put(url, json=data, headers=auth_header(token))
 
 def delete_budget(token: str, budget_id: int) -> requests.Response:
     """
@@ -196,34 +207,3 @@ def delete_budget(token: str, budget_id: int) -> requests.Response:
     """
     url = f"{API_URL}/budgets/{budget_id}"
     return requests.delete(url, headers=auth_header(token))
-
-def predict_by_type(token, tx_type):
-    """
-    tx_type: "income" or "expense"
-    """
-    url = f"{API_URL}/transactions/predict/type"
-    params = {"type": tx_type}
-    return requests.get(url, params=params, headers=auth_header(token))
-
-def predict_by_type_category(token, category_id):
-    url = f"{API_URL}/transactions/predict/type-category"
-    params = {"category_id": category_id}
-    return requests.get(url, params=params, headers=auth_header(token))
-
-def create_transaction(token, user_id, category_id, amount, description, tx_type, tx_date):
-    """
-    Creates a new transaction
-    tx_date must be in DD-MM-YYYY format
-    """
-    url = f"{API_URL}/transactions"
-
-    payload = {
-        "user_id": user_id,
-        "category_id": category_id,
-        "amount": amount,
-        "description": description,
-        "type": tx_type,
-        "transaction_date": tx_date
-    }
-
-    return requests.post(url, json=payload, headers=auth_header(token))
