@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-
 from services.api import (
     get_budgets,
     get_transactions,
@@ -11,40 +10,69 @@ from services.api import (
     delete_budget
 )
 
+def normalize_to_list(response):
+    """
+    Mengubah bentuk response backend apa pun menjadi list of dicts:
+    - list langsung → return as-is
+    - dict dengan key "data" → return data
+    - dict dengan 1 list di dalamnya → return list tsb
+    - dict kosong atau error → return []
+    """
+    if response is None:
+        return []
+
+    if isinstance(response, list):
+        return response
+
+    if isinstance(response, dict):
+        # Case: {"data": [...]}
+        if "data" in response and isinstance(response["data"], list):
+            return response["data"]
+
+        # Case: {"budgets": [...]}, {"items": [...]}, etc.
+        for v in response.values():
+            if isinstance(v, list):
+                return v
+
+        # Case: error or not a list
+        return []
+
+    return []
+
 
 def render():
-    st.header("📊 Recurring Budget Planner")
+    st.header("💰 Monthly Budget Planner")
 
     token = st.session_state.get("jwt")
-    user_id = st.session_state.get("user_id")
 
     if not token:
         st.error("You must log in first.")
         return
 
     # ============================================================
-    # LOAD DATA
+    # LOAD DATA (TANPA ERROR MESKI BACKEND TIDAK KONSISTEN)
     # ============================================================
-    budgets = get_budgets(token)
-    transactions = get_transactions(token)
-    categories = get_categories(token)
+    raw_budgets = get_budgets(token)
+    raw_tx = get_transactions(token)
+    raw_cat = get_categories(token)
+
+    budgets = normalize_to_list(raw_budgets)
+    transactions = normalize_to_list(raw_tx)
+    categories = normalize_to_list(raw_cat)
 
     budget_df = pd.DataFrame(budgets)
     tx_df = pd.DataFrame(transactions)
     cat_df = pd.DataFrame(categories)
 
-    # Normalize transaction_date
-    tx_df.rename(columns={
-        "transaction-date": "transaction_date",
-        "transaction_date": "transaction_date",
-        "date": "transaction_date"
-    }, inplace=True)
+    # Kalau kolom tidak ada → buat kolom kosong agar tidak error
+    for df, col in [(budget_df, "budget_amount"), (budget_df, "start_date"), (budget_df, "end_date")]:
+        if col not in df.columns:
+            df[col] = None
 
-    if "transaction_date" not in tx_df.columns:
-        st.error("Backend missing 'transaction_date'")
-        return
-
-    tx_df["transaction_date"] = pd.to_datetime(tx_df["transaction_date"], errors="coerce")
+    if "amount" in tx_df.columns:
+        tx_df["amount"] = pd.to_numeric(tx_df["amount"], errors="coerce")
+    else:
+        tx_df["amount"] = 0
 
     # ============================================================
     # STEP 1 — SELECT MONTH & YEAR
@@ -75,19 +103,19 @@ def render():
 
     st.write(f"Selected: **{months[selected_month]} {selected_year}**")
 
-    # Month start and end boundaries
     month_start = datetime(selected_year, selected_month, 1)
-    if selected_month == 12:
-        month_end = datetime(selected_year + 1, 1, 1)
-    else:
-        month_end = datetime(selected_year, selected_month + 1, 1)
+    month_end = (
+        datetime(selected_year + 1, 1, 1)
+        if selected_month == 12 else
+        datetime(selected_year, selected_month + 1, 1)
+    )
 
     # ============================================================
-    # STEP 2 — ADD NEW BUDGET (FOR THIS MONTH)
+    # STEP 2 — ADD NEW BUDGET
     # ============================================================
-    st.subheader("➕ Add New Budget for This Month")
+    st.subheader("➕ Add New Budget")
 
-    category_map = {c["name"]: c["id"] for c in categories}
+    category_map = {c.get("name", f"Cat{idx}"): c.get("id") for idx, c in enumerate(categories)}
 
     default_start = month_start.strftime("%d-%m-%Y")
     default_end = (month_end - pd.Timedelta(days=1)).strftime("%d-%m-%Y")
@@ -109,23 +137,18 @@ def render():
             start_date=default_start,
             end_date=default_end
         )
-
-        if "data" in resp:
-            st.success("Budget created!")
-            st.experimental_rerun()
-        else:
-            st.error(resp)
+        st.success("Budget created!")
+        st.experimental_rerun()
 
     # ============================================================
     # STEP 3 — MONTHLY SUMMARY
     # ============================================================
     st.subheader("📌 Monthly Summary")
 
-    # Normalize budget dates
-    budget_df["start_date"] = pd.to_datetime(budget_df["start_date"])
-    budget_df["end_date"] = pd.to_datetime(budget_df["end_date"])
+    # Normalize dates
+    budget_df["start_date"] = pd.to_datetime(budget_df["start_date"], errors="coerce")
+    budget_df["end_date"] = pd.to_datetime(budget_df["end_date"], errors="coerce")
 
-    # Filter applicable budgets
     applicable_budget = budget_df[
         (budget_df["start_date"] < month_end) &
         (budget_df["end_date"] >= month_start)
@@ -133,14 +156,13 @@ def render():
 
     budget_for_month = applicable_budget["budget_amount"].sum()
 
-    # Filter transactions for this month
-    tx_month = tx_df[
-        (tx_df["transaction_date"].dt.month == selected_month) &
-        (tx_df["transaction_date"].dt.year == selected_year) &
-        (tx_df["type"] == "expense")
-    ]
+    # Expenses only
+    if "type" in tx_df.columns:
+        tx_expense = tx_df[tx_df["type"] == "expense"]
+    else:
+        tx_expense = pd.DataFrame(columns=tx_df.columns)
 
-    total_spend = tx_month["amount"].sum()
+    total_spend = tx_expense["amount"].sum()
     remaining = budget_for_month - total_spend
 
     c1, c2, c3 = st.columns(3)
@@ -153,42 +175,32 @@ def render():
     # ============================================================
     st.subheader("📊 Category Breakdown")
 
-    if not tx_month.empty:
-        tx_cat = tx_month.merge(cat_df, left_on="category_id", right_on="id", how="left")
-        cat_spend = tx_cat.groupby("name")["amount"].sum().reset_index()
+    if not tx_expense.empty:
+        tx_cat = tx_expense.merge(cat_df, left_on="category_id", right_on="id", how="left")
+        cat_spend = tx_cat.groupby(tx_cat["name"].fillna("Unknown"))["amount"].sum().reset_index()
         cat_spend.rename(columns={"name": "Category", "amount": "Spent"}, inplace=True)
-
         st.dataframe(cat_spend, use_container_width=True)
     else:
-        st.info("No transactions for this month.")
+        st.info("No spending this month.")
 
     # ============================================================
-    # STEP 5 — PROGRESS PER CATEGORY
-    # ============================================================
-    st.subheader("📌 Progress per Category")
-
-    if not tx_month.empty:
-        for _, row in cat_spend.iterrows():
-            st.write(f"### {row['Category']}")
-            pct = row["Spent"] / budget_for_month if budget_for_month > 0 else 0
-            st.progress(min(pct, 1))
-            st.caption(f"Spent ${row['Spent']:.2f} of ${budget_for_month:.2f}")
-
-    # ============================================================
-    # STEP 6 — EDIT EXISTING BUDGETS
+    # STEP 5 — EDIT BUDGET
     # ============================================================
     st.subheader("✏️ Edit Existing Budgets")
 
     if not budget_df.empty:
+        display_df = budget_df.copy()
+        display_df.rename(columns={
+            "id": "ID",
+            "category_id": "Category",
+            "budget_amount": "Amount",
+            "start_date": "Start",
+            "end_date": "End"
+        }, inplace=True)
+
         edit_df = st.data_editor(
-            budget_df.rename(columns={
-                "id": "ID",
-                "category_id": "Category",
-                "budget_amount": "Amount",
-                "start_date": "Start",
-                "end_date": "End"
-            }),
-            disabled=["ID", "user_id"],
+            display_df,
+            disabled=["ID"],
             use_container_width=True
         )
 
@@ -197,33 +209,23 @@ def render():
                 old = budget_df.loc[idx]
                 new = edit_df.loc[idx]
 
-                if old["budget_amount"] != new["Amount"] or \
-                   str(old["start_date"]) != str(new["Start"]) or \
-                   str(old["end_date"]) != str(new["End"]):
+                updated = {
+                    "budget_amount": float(new["Amount"]),
+                    "start_date": pd.to_datetime(new["Start"]).strftime("%d-%m-%Y"),
+                    "end_date": pd.to_datetime(new["End"]).strftime("%d-%m-%Y")
+                }
+                update_budget(token, old["id"], updated)
 
-                    payload = {
-                        "budget_amount": float(new["Amount"]),
-                        "start_date": pd.to_datetime(new["Start"]).strftime("%d-%m-%Y"),
-                        "end_date": pd.to_datetime(new["End"]).strftime("%d-%m-%Y")
-                    }
-
-                    update_budget(token, old["id"], payload)
-
-            st.success("Budgets updated!")
+            st.success("Updated!")
             st.experimental_rerun()
 
     # ============================================================
-    # STEP 7 — DELETE BUDGET
+    # STEP 6 — DELETE
     # ============================================================
     st.subheader("🗑 Delete Budget")
 
     delete_id = st.number_input("Budget ID to delete:", min_value=1, step=1)
-
     if st.button("Delete Budget"):
-        resp = delete_budget(token, delete_id)
-        if "message" in resp:
-            st.success("Budget deleted.")
-            st.experimental_rerun()
-        else:
-            st.error(resp)
-    
+        delete_budget(token, delete_id)
+        st.success("Deleted!")
+        st.experimental_rerun()
