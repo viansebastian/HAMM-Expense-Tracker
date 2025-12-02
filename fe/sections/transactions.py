@@ -18,8 +18,9 @@ def render(current_page):
     # 'transactions_df' is the clean DataFrame from state_manager
     df = st.session_state.get('transactions_df', pd.DataFrame())
     categories = st.session_state.get('categories', [])
-    user_id = st.session_state.get('user_id', 6)
-    token = st.session_state.get('jwt', 'MOCK_TOKEN')
+    user_id = st.session_state.get('user_id')
+    print(user_id)
+    token = st.session_state.get('jwt')
 
     tab_add, tab_view, tab_cat = st.tabs(["➕ Add Transaction", "👁️ View & Manage", "🏷️ Categories"])
 

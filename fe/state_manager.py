@@ -47,10 +47,24 @@ def load_all_user_data():
         st.session_state.budgets = get_budgets(token=token)
 
     if "transactions" not in st.session_state:
-        st.session_state.transactions = get_transactions(token=token)
+        # 1. Fetch ONCE
+        resp = get_transactions(token=token)
+        
+        # 2. Check Status and Extract JSON
+        if resp.status_code == 200:
+            raw_data = resp.json()
+        else:
+            raw_data = []
 
-    # You can create DataFrames here if needed:
-    # st.session_state.trans_df = pd.DataFrame(st.session_state.transactions)
+        # 3. Store raw data (as list/dict, NOT Response object)
+        st.session_state.transactions = raw_data
+        
+        # 4. Transform immediately
+        # DEBUG PRINT: Verify we actually have a list here
+        # print(f"DEBUG: Raw API Data Type: {type(raw_data)}") 
+        # print(f"DEBUG: Raw API Data Content (First 1): {raw_data[:1] if isinstance(raw_data, list) and raw_data else 'Empty'}")
+        
+        st.session_state.transactions_df = transform_transaction_data(raw_data)
     
     if st.session_state.get("refresh"):
         #st.session_state.categories = get_categories(token=token)

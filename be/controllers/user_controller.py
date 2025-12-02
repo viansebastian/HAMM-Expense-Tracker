@@ -41,7 +41,8 @@ def create_user():
             "error": "User with this email already exists"
         })
         
-    hashed_pw = generate_password_hash(data["password"])
+    # hashed_pw = generate_password_hash(data["password"])
+    hashed_pw = data['password']
     new_user = models.User(
         email=data["email"],
         password_hash=hashed_pw,
