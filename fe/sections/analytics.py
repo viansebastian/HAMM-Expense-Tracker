@@ -17,7 +17,7 @@ def format_currency(amount):
     except (ValueError, TypeError):
         amount = 0.0
         
-    return f"Rp. {amount:,.2f}"
+    return f"Rp{amount:,.2f}"
 
 def get_valid_date_column(df):
     """Identifies the transaction date column from possible names."""
@@ -479,7 +479,7 @@ def render():
                 border:1px solid #e6e6e6;
                 box-shadow:0px 1px 2px rgba(0,0,0,0.05);
                 text-align:center;">
-                <div style="font-size:26px; font-weight:600; color:{color};">Rp. {value:,.2f}</div>
+                <div style="font-size:26px; font-weight:600; color:{color};">Rp{value:,.2f}</div>
                 <div style="color:gray; margin-top:4px;">{label}</div>
             </div>
         """, unsafe_allow_html=True)
