@@ -158,7 +158,7 @@ def render_predictions_section_new(token):
     """Renders the advanced AI prediction section with line charts."""
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""
-    <div style="padding:18px; border-radius:12px; background:#d9d9d9; border:1px solid #eee; margin-bottom:25px;">
+    <div style="padding:18px; border-radius:12px; background:#fafafa; border:1px solid #eee; margin-bottom:25px;">
             <h3 style="margin-top:0;">🔮 2-Month Transaction Prediction (AI) </h3>
         </div>
     """, unsafe_allow_html=True)
@@ -258,8 +258,8 @@ def render_predictions_section_new(token):
 # ======================================================
 def render():
     st.markdown("""
-        <h2 style="text-align:center; margin-bottom:0px;">📊 Analytics & Insights</h2>
-        <p style="text-align:center; color:gray; margin-top:-6px;">
+        <h2 style="margin-bottom:0px;">📊 Analytics & Insights</h2>
+        <p style="color:gray; margin-top:-6px;">
             Understand your finances with clean and interactive visual summaries.
         </p>
         <br>
@@ -374,9 +374,8 @@ def render():
     <div style="
         padding:18px; 
         border-radius:12px; 
-        background: #d9d9d9; 
-        border:1px solid #d6d6d6;
-        box-shadow:0 1px 3px rgba(0,0,0,0.08);
+        background: #fafafa; 
+        border:1px solid #e6e6e6;
         margin-bottom:25px;
     ">
         <h3 style="margin-top:0;">🔍 Filters</h3>
@@ -499,7 +498,7 @@ def render():
     # ======================================================
     
     st.markdown("""
-    <div style="padding:18px; border-radius:12px; background:#d9d9d9; 
+    <div style="padding:18px; border-radius:12px; background:#fafafa; 
                   border:1px solid #eee; margin-bottom:25px;">
         <h3 style="margin-top:0;">📊 Detailed Breakdown </h3>
     </div>
@@ -606,7 +605,7 @@ def render():
     # MONTHLY TREND CHART (Full Width)
     # ======================================================
     st.markdown("""
-        <div style="padding:18px; border-radius:12px; background:#d9d9d9; 
+        <div style="padding:18px; border-radius:12px; background:#fafafa; 
                     border:1px solid #eee; margin-bottom:25px;">
             <h3 style="margin-top:0;">📈 Monthly Income vs Expense </h3>
         </div>
