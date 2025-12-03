@@ -238,9 +238,9 @@ def render():
     remaining_val = total_budget_val - total_spent_val
 
     m1, m2, m3 = st.columns(3)
-    m1.metric("Total Budget", f"${total_budget_val:,.2f}")
-    m2.metric("Total Spent", f"${total_spent_val:,.2f}", delta=f"{-total_spent_val:,.2f}", delta_color="inverse")
-    m3.metric("Remaining", f"${remaining_val:,.2f}", delta_color="normal")
+    m1.metric("Total Budget", f"Rp.{total_budget_val:,.2f}")
+    m2.metric("Total Spent", f"Rp.{total_spent_val:,.2f}", delta=f"{-total_spent_val:,.2f}", delta_color="inverse")
+    m3.metric("Remaining", f"Rp.{remaining_val:,.2f}", delta_color="normal")
 
 # ==========================================
     # STEP 4: CATEGORY BREAKDOWN (With % Bars)
@@ -277,8 +277,8 @@ def render():
         st.dataframe(
             display_df,
             column_config={
-                "Budget": st.column_config.NumberColumn(format="$%.2f"),
-                "Spent": st.column_config.NumberColumn(format="$%.2f"),
+                "Budget": st.column_config.NumberColumn(format="Rp.%.2f"),
+                "Spent": st.column_config.NumberColumn(format="Rp.%.2f"),
                 "ratio": st.column_config.ProgressColumn(
                     "Used %",
                     help="Percentage of budget used",
@@ -366,7 +366,7 @@ def render():
 
     if not budget_df.empty:
         # Create user-friendly labels for the dropdown
-        # Format: "Groceries - $500 (Starts: 2023-01-01)"
+        # Format: "Groceries - Rp.500 (Starts: 2023-01-01)"
         delete_map = {}
         for idx, row in budget_df.iterrows():
             c_name = cat_map.get(row['category_id'], 'Unknown')
